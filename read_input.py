@@ -28,11 +28,13 @@ def itx_to_pandas(path: str) -> pd.DataFrame:
     return dfn
 
 
-def read_file(path: str):
-    data_df = itx_to_pandas(path)
+def read_counts_file(path: str) -> pd.Series:
+    with open(path, "r") as f:
+        raw_data = f.read().split("\n")
+    numeric_data = [float(data) for data in raw_data if data.isnumeric()]
 
-    return data_df
+    return pd.Series(numeric_data)
 
 
 if __name__ == '__main__':
-    df = read_file("histogram.itx")
+    df = read_counts_file("histogram.itx")
