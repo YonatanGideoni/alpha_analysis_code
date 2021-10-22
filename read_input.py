@@ -32,3 +32,7 @@ def read_file(path: str):
     data_df = itx_to_pandas(path)
 
     return data_df
+
+
+if __name__ == '__main__':
+    df = read_file("histogram.itx")
