@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import signal
 
+from peak_analysis import find_peaks
 from read_input import read_counts_file
 
 
-def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5, normalize=True, plot_peaks=True,
-                          max_rel_peak_size=5.):
+def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5, normalize=True, plot_peaks=True):
     if normalize:
         data /= data.sum()
 
@@ -15,7 +15,7 @@ def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5,
     ax = data.plot.bar(ylabel="Density" if normalize else "Counts", xlabel="Channel", label="Raw Data", ax=ax, width=1.)
 
     if plot_peaks:
-        peaks, peak_properties = signal.find_peaks(data.values, height=data.max() / max_rel_peak_size)
+        peaks, peak_properties = find_peaks(data)
 
         ax = data.where(data.index.isin(peaks), 0).plot.bar(color='r', ax=ax, label="Peaks", width=1)
 
@@ -24,5 +24,5 @@ def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5,
 
 
 if __name__ == '__main__':
-    visualize_counts_plot(read_counts_file("histogram.itx"))
+    visualize_counts_plot(read_counts_file("thr45measurement1050.itx"))
     plt.show()
