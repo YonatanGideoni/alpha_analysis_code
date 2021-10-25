@@ -18,7 +18,7 @@ def find_peaks(data: pd.Series, max_rel_peak_size=5., min_peak_dist=15):
 
 
 def area_based_gaussian(x, I, s, u):
-    return (I / (2 * np.pi * s ** 2)) * np.exp(-(x - u) ** 2 / (2 * s ** 2))
+    return (I / ((2 * np.pi) ** 0.5 * s)) * np.exp(-(x - u) ** 2 / (2 * s ** 2))
 
 
 def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
