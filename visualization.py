@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from scipy import signal
 
-from peak_analysis import find_peaks
+from peak_analysis import find_peaks, fit_gaussian_to_peak
 from read_input import read_counts_file
 
 
@@ -24,5 +24,11 @@ def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5,
 
 
 if __name__ == '__main__':
-    visualize_counts_plot(read_counts_file("thr45measurement1050.itx"))
+    data = read_counts_file("thr45measurement1050.itx")
+    visualize_counts_plot(data)
+
+    peaks, _ = find_peaks(data)
+    for peak in peaks:
+        fit_gaussian_to_peak(data, peak, plot=True)
+
     plt.show()
