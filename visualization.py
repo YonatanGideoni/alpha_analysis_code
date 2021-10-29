@@ -26,3 +26,4 @@ def plot_peak_info(peak_channel, peak_height, area, std, mean, area_std, std_std
                 f"$\sigma$={std:.2f}$\pm${std_std:.2f}\n" \
                 f"Area={area:.3f}$\pm${area_std:.3f}"
     plt.annotate(peak_text, xy=(peak_channel, peak_height), ha='center')
+    print('hi')
