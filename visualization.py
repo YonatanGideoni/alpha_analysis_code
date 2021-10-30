@@ -3,14 +3,16 @@ import pandas as pd
 
 
 def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5, normalize=True, plot_peaks=True,
-                          alpha=1):
+                          alpha=1, c='darkblue', rolling_window=False):
     if normalize:
         data /= data.sum()
 
-    ax = data.rolling(window=rolling_avg_size).mean().plot(c="k", ax=plt.gca(), alpha=alpha,
-                                                           label=f"Rolling Mean, Window Size: {rolling_avg_size}")
+    ax = plt.gca()
+    if rolling_window:
+        ax = data.rolling(window=rolling_avg_size).mean().plot(c="k", ax=ax, alpha=alpha,
+                                                               label=f"Rolling Mean, Window Size: {rolling_avg_size}")
     ax = data.plot.bar(ylabel="Density" if normalize else "Counts", xlabel="Channel", label="Raw Data", ax=ax, width=1.,
-                       alpha=alpha)
+                       alpha=alpha, c=c)
 
     if plot_peaks:
         from peak_analysis import find_peaks
