@@ -7,11 +7,11 @@ from read_input import read_counts_file
 from visualization import visualize_counts_plot
 
 if __name__ == '__main__':
-    visualize_counts_plot(read_counts_file('thr30measurementAl1159.itx'))
+    visualize_counts_plot(read_counts_file('thr30measurementAl1159.itx'), plot_peaks=False, data_label='With Aluminium')
 
     data = read_counts_file("thr45measurement1104.itx")
 
-    visualize_counts_plot(data, alpha=0.4, c='m')
+    visualize_counts_plot(data, alpha=0.4, c='m', plot_peaks=False, data_label='Without Aluminium')
 
     # peaks, _ = find_peaks(data)
     # peak_loc = []
