@@ -31,7 +31,7 @@ def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
     I, s, u = params
 
     if plot:
-        colour = np.random.rand(3)
+        colour = 'k'
         dense_channels = np.linspace(channels.min(), channels.max())
         plt.plot(dense_channels, area_based_gaussian(dense_channels, I, s, u), linewidth=3, c=colour)
 
