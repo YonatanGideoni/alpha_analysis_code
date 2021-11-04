@@ -59,29 +59,30 @@ def files_lst():
 if __name__ == '__main__':
     # aluminium_data = read_counts_file('thr30measurementAl1159.itx')
     # activity = max_point_activity('thr30measurementAl1159.itx')
-    files_lst()
+    #files_lst()
     # find_peaks("thr30unknown1157.itx")
     # visualize_counts_plot(aluminium_data, plot_peaks=False, data_label='With Aluminium')
 
     # data = read_counts_file("thr30unknown1157.itx")
-    visualize_counts_plot(data, alpha=0.7, c='m', plot_peaks=False,data_label='11:57')
+    # visualize_counts_plot(data, alpha=0.7, c='m', plot_peaks=False,data_label='11:57')
     #
     # data = read_counts_file("thr30unknown1326.itx")
-    visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False,data_label='13:26')
+    # visualize_counts_plot(data, alpha=0.7, c='b', plot_peaks=False, data_label='13:26')
+    data =read_counts_file("thr30unknown1157.itx")
+    visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False)
+    peaks, _ = find_peaks(data, max_rel_peak_size=30.)
+    peak_loc = []
+    peak_std = []
+    for peak in peaks:
+        [peak_area, gaussian_std, peak_channel], cov_mat = fit_gaussian_to_peak(data, peak, plot=True, delta=10)
+        peak_loc.append(peak_channel)
+        peak_std.append(cov_mat[-1, -1] ** 0.5)
 
-    # peaks, _ = find_peaks(data, max_rel_peak_size=3., min_peak_dist=100)
-    # peak_loc = []
-    # peak_std = []
-    # for peak in peaks:
-    #     [peak_area, gaussian_std, peak_channel], cov_mat = fit_gaussian_to_peak(data, peak, plot=True, delta=40)
-    #     peak_loc.append(peak_channel)
-    #     peak_std.append(cov_mat[-1, -1] ** 0.5)
+    ####################
+    plt.xlim(min(peaks) * 0.8)
 
-    #####################
-    # # plt.xlim(min(peaks) * 0.8)
-    #
     # energies = [5340.36, 5423.15, 5685.37, 6050.78, 6288.08, 6778.3, 8784.86]
-    #
+    # plt.figure()
     # plt.scatter(peak_loc, energies)
     # plt.errorbar(peak_loc, energies, xerr=peak_std, fmt='none', ecolor='r')
     #
@@ -100,6 +101,6 @@ if __name__ == '__main__':
     #
     # plt.xlim(0)
     # plt.ylim(0)
-
+    #
     plt.show()
     print('h')

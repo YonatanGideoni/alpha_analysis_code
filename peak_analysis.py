@@ -45,5 +45,11 @@ def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
 
 
 if __name__ == '__main__':
-    pass
+    data = read_counts_file("thr30unknown1326.itx")
+    print(find_peaks(data, max_rel_peak_size=20))
+    print(find_peaks(data,max_rel_peak_size=20)[0]*4.623)
+
+    data = read_counts_file("thr45measurement1104.itx")
+    print(find_peaks(data, max_rel_peak_size=20))
+    print(find_peaks(data, max_rel_peak_size=20)[0]*4.633)
     # energies =
