@@ -28,6 +28,17 @@ def get_peaks(data: pd.Series, max_rel_size, min_dist, rebin_size, plot=True):
     return peaks
 
 
+def annotate_peaks(data, peaks, rebin_size):
+    arrow_dy = data.max() / 15
+    for peak, energy in zip(peaks, ENERGIES):
+        arrow_start_y = data.iloc[peak] + arrow_dy + 15
+        plt.arrow(peak, arrow_start_y, dx=0, dy=-arrow_dy, color='r', width=0.1, head_width=10)
+
+        peak_text = f'$E$={energy}[keV]\n' \
+                    f'$\mu$={peak:.1f}$\pm${1. / 3 * rebin_size:.1f}'
+        plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center', fontsize=10)
+
+
 def counts_spectrum(rebin_size=2):
     data = load_data('thr10sync1303.itx', rebin_size)
 
@@ -38,14 +49,7 @@ def counts_spectrum(rebin_size=2):
 
     data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
 
-    arrow_dy = data.max() / 15
-    for peak, energy in zip(peaks, ENERGIES):
-        arrow_start_y = data.iloc[peak] + arrow_dy + 15
-        plt.arrow(peak, arrow_start_y, dx=0, dy=-arrow_dy, color='r', width=0.1, head_width=10)
-
-        peak_text = f'$E$={energy}[keV]\n' \
-                    f'$\mu$={peak:.1f}$\pm${1. / 3 * rebin_size:.1f}'
-        plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center', fontsize=10)
+    annotate_peaks(data, peaks, rebin_size)
 
     mixed_peaks = peaks[:2]
     refined_mixed_peaks = correct_mixed_peaks(data, mixed_peaks, delta=8 // rebin_size)
@@ -99,6 +103,8 @@ def aluminium_width(rebin_size=8):
     visualize_counts_plot(data, normalize=False, plot_peaks=False)
 
     peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
+
+    annotate_peaks(data, peaks, rebin_size)
 
     plt.xticks(np.arange(0, data.index.max(), 32 // rebin_size),
                labels=map(str, np.arange(0, data.index.max() * rebin_size, 32)),
