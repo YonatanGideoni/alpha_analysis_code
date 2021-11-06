@@ -55,7 +55,7 @@ def energy_spectrum(peaks: list, peak_error: list):
     plt.errorbar(ENERGIES, peaks, yerr=peak_error, fmt='o', ecolor='r', linestyle='None', label='Data')
 
     params, cov_mat = curve_fit(lambda x, a, b: (x - b) / a, ENERGIES, peaks)
-    print(f'a={params[0]}, b={params[1]}, {cov_mat=}')
+    print(f'a={params[0]}, b={params[1]}, \n{cov_mat=}')
 
     energies = np.linspace(min(ENERGIES) * 0.99, max(ENERGIES) * 1.01)
     plt.plot(energies, (energies - params[1]) / params[0], c="k", label='Linear fit')
