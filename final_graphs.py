@@ -51,13 +51,14 @@ def counts_spectrum(rebin_size=2):
 def energy_spectrum(peaks: list, peak_error: list):
     plt.figure()
 
-    plt.scatter(ENERGIES, peaks, s=50)
-    plt.errorbar(ENERGIES, peaks, yerr=peak_error, fmt='none', ecolor='r')
+    plt.grid(zorder=-10)
+    plt.errorbar(ENERGIES, peaks, yerr=peak_error, fmt='o', ecolor='r', linestyle='None', label='Data')
 
     params, cov_mat = curve_fit(lambda x, a, b: (x - b) / a, ENERGIES, peaks)
+    print(f'a={params[0]}, b={params[1]}, {cov_mat=}')
 
-    energies = np.linspace(0, max(ENERGIES))
-    plt.plot(energies, (energies - params[1]) / params[0], c="k")
+    energies = np.linspace(min(ENERGIES) * 0.99, max(ENERGIES) * 1.01)
+    plt.plot(energies, (energies - params[1]) / params[0], c="k", label='Linear fit')
 
     plt.title('Channels to Alpha Decay Energy Linear Calibration'
               f'\nC=(E-({params[1]:.2f}$\pm${cov_mat[-1, -1] ** 0.5:.2f}))/'
@@ -66,13 +67,14 @@ def energy_spectrum(peaks: list, peak_error: list):
 
     plt.xlabel('Energy[keV]', fontsize=12)
     plt.ylabel('Channel', fontsize=12)
+    plt.legend(fontsize=12)
 
-    plt.xlim(0)
-    plt.ylim(0)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
 
     peaks = np.array(peaks)
-    chisq = ((peaks - (ENERGIES - params[1]) / params[0]) ** 2 / np.array(peak_error) ** 2).sum()
-    print(chisq)
+    chi_square = ((peaks - (ENERGIES - params[1]) / params[0]) ** 2 / np.array(peak_error) ** 2).sum()
+    print(f'{chi_square=:.2f}')
 
 
 if __name__ == '__main__':
