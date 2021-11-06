@@ -39,6 +39,13 @@ def annotate_peaks(data, peaks, rebin_size):
         plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center', fontsize=10)
 
 
+def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
+    refined_mixed_peaks = correct_mixed_peaks(data, mixed_peaks, delta=delta // rebin_size)
+    print(f'Original peaks loc: {mixed_peaks}, refined loc: {refined_mixed_peaks}')
+
+    return refined_mixed_peaks
+
+
 def counts_spectrum(rebin_size=2):
     data = load_data('thr10sync1303.itx', rebin_size)
 
@@ -51,9 +58,7 @@ def counts_spectrum(rebin_size=2):
 
     annotate_peaks(data, peaks, rebin_size)
 
-    mixed_peaks = peaks[:2]
-    refined_mixed_peaks = correct_mixed_peaks(data, mixed_peaks, delta=8 // rebin_size)
-    print(f'Original peaks loc: {mixed_peaks}, refined loc: {refined_mixed_peaks}')
+    refined_mixed_peaks = get_refined_peaks(peaks[:2], data, rebin_size, 8)
 
     plt.legend(fontsize=12)
 
@@ -105,6 +110,8 @@ def aluminium_width(rebin_size=8):
     peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
 
     annotate_peaks(data, peaks, rebin_size)
+
+    refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
 
     plt.xticks(np.arange(0, data.index.max(), 32 // rebin_size),
                labels=map(str, np.arange(0, data.index.max() * rebin_size, 32)),
