@@ -15,3 +15,7 @@ def channel_to_energy(channel, channel_sigma, slope=4.626433105445935, intercept
                     intercept_sigma ** 2 + 2 * channel * correlation_coeff) ** 0.5
 
     return energy, energy_sigma
+
+
+if __name__ == '__main__':
+    print(channel_to_energy(1200, channel_sigma=2))
