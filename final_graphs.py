@@ -9,11 +9,16 @@ from visualization import visualize_counts_plot
 ENERGIES = np.array([5340.36, 5423.15, 5685.37, 6050.78, 6288.08, 6778.3, 8784.86])
 
 
-def counts_spectrum(rebin_size=2):
-    data = read_counts_file('thr10sync1303.itx')
+def load_data(path: str, rebin_size):
+    data = read_counts_file(path)
     data.iloc[:10] = 0
-
     data = data.groupby(data.index // rebin_size).apply(sum)
+
+    return data
+
+
+def counts_spectrum(rebin_size=2):
+    data = load_data('thr10sync1303.itx')
 
     visualize_counts_plot(data, plot_peaks=False, data_label='Raw Data', normalize=False)
 
@@ -78,9 +83,7 @@ def energy_spectrum(peaks: list, peak_error: list):
 
 
 def aluminium_width(rebin_size=8):
-    data = read_counts_file('thr10aluminum1143.itx')
-    data.iloc[:10] = 0
-    data = data.groupby(data.index // rebin_size).apply(sum)
+    data = load_data('thr10aluminum1143.itx', rebin_size)
 
     visualize_counts_plot(data, normalize=False, plot_peaks=False)
 
