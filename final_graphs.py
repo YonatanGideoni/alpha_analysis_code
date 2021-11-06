@@ -54,8 +54,6 @@ def counts_spectrum(rebin_size=2):
     peaks = get_peaks(data, max_rel_size=6., min_dist=15, rebin_size=rebin_size)
     print(f'Num peaks: {len(peaks)}')
 
-    data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
-
     annotate_peaks(data, peaks, rebin_size)
 
     refined_mixed_peaks = get_refined_peaks(peaks[:2], data, rebin_size, 8)
