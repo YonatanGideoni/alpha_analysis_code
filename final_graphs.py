@@ -28,13 +28,13 @@ def get_peaks(data: pd.Series, max_rel_size, min_dist, rebin_size, plot=True):
     return peaks
 
 
-def annotate_peaks(data, peaks, rebin_size):
+def annotate_peaks(data, peaks, rebin_size, energy_label='E'):
     arrow_dy = data.max() / 15
     for peak, energy in zip(peaks, ENERGIES):
         arrow_start_y = data.iloc[peak] + arrow_dy + 15
         plt.arrow(peak, arrow_start_y, dx=0, dy=-arrow_dy, color='r', width=0.1, head_width=10)
 
-        peak_text = f'$E$={energy}[keV]\n' \
+        peak_text = f'${energy_label}$={energy}[keV]\n' \
                     f'$\mu$={peak:.1f}$\pm${1. / 3 * rebin_size:.1f}'
         plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center', fontsize=10)
 
@@ -109,7 +109,7 @@ def aluminium_width(rebin_size=8):
 
     peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
 
-    annotate_peaks(data, peaks, rebin_size)
+    annotate_peaks(data, peaks, rebin_size, energy_label='E_0')
 
     refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
 
