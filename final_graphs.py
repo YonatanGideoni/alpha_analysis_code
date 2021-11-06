@@ -77,9 +77,28 @@ def energy_spectrum(peaks: list, peak_error: list):
     print(f'{chi_square=:.2f}')
 
 
-if __name__ == '__main__':
-    peaks, peak_error = counts_spectrum()
+def aluminium_width(rebin_size=8):
+    data = read_counts_file('thr10aluminum1143.itx')
+    data.iloc[:10] = 0
+    data = data.groupby(data.index // rebin_size).apply(sum)
 
-    energy_spectrum(peaks, peak_error)
+    visualize_counts_plot(data, normalize=False, plot_peaks=False)
+
+    peaks, _ = find_peaks(data, max_rel_peak_size=2.2, min_peak_dist=60 // rebin_size)
+    print(f'Num peaks: {len(peaks)}')
+
+    data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
+
+    plt.xticks(np.arange(0, data.index.max(), 32 // rebin_size),
+               labels=map(str, np.arange(0, data.index.max() * rebin_size, 32)),
+               fontsize=12)
+    plt.yticks(fontsize=12)
+
+
+if __name__ == '__main__':
+    # peaks, peak_error = counts_spectrum()
+    # energy_spectrum(peaks, peak_error)
+
+    aluminium_width()
 
     plt.show()
