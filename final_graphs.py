@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
@@ -17,12 +18,22 @@ def load_data(path: str, rebin_size):
     return data
 
 
+def get_peaks(data: pd.Series, max_rel_size, min_dist, rebin_size, plot=True):
+    peaks, _ = find_peaks(data, max_rel_peak_size=max_rel_size, min_peak_dist=min_dist // rebin_size)
+    print(f'Num peaks: {len(peaks)}')
+
+    if plot:
+        data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
+
+    return peaks
+
+
 def counts_spectrum(rebin_size=2):
-    data = load_data('thr10sync1303.itx')
+    data = load_data('thr10sync1303.itx', rebin_size)
 
     visualize_counts_plot(data, plot_peaks=False, data_label='Raw Data', normalize=False)
 
-    peaks, _ = find_peaks(data, max_rel_peak_size=6., min_peak_dist=15 // rebin_size)
+    peaks = get_peaks(data, max_rel_size=6., min_dist=15, rebin_size=rebin_size)
     print(f'Num peaks: {len(peaks)}')
 
     data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
@@ -87,10 +98,7 @@ def aluminium_width(rebin_size=8):
 
     visualize_counts_plot(data, normalize=False, plot_peaks=False)
 
-    peaks, _ = find_peaks(data, max_rel_peak_size=2.2, min_peak_dist=60 // rebin_size)
-    print(f'Num peaks: {len(peaks)}')
-
-    data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
+    peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
 
     plt.xticks(np.arange(0, data.index.max(), 32 // rebin_size),
                labels=map(str, np.arange(0, data.index.max() * rebin_size, 32)),
