@@ -109,8 +109,8 @@ def energy_spectrum(peaks: list, peak_error: list):
     print(f'{chi_square=:.2f}')
 
 
-def aluminium_width(rebin_size=8):
-    data = load_data('thr10aluminum1143.itx', rebin_size)
+def material_width(path: str, material_name, rebin_size=8):
+    data = load_data(path, rebin_size)
 
     visualize_counts_plot(data, normalize=False, plot_peaks=False)
 
@@ -120,13 +120,21 @@ def aluminium_width(rebin_size=8):
 
     # refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
 
-    setup_plot(data, rebin_size, '$^{228}$Th Decay Spectrum with Aluminium Foil Blockage', xtick_every=40)
+    setup_plot(data, rebin_size, f'$^{{228}}$Th Decay Spectrum with {material_name} Foil Blockage', xtick_every=40)
 
     return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
 
 
-def get_aluminium_energies(al_peaks, peak_err):
-    energies, energy_errors = zip(*(channel_to_energy(peak, err) for peak, err in zip(al_peaks, peak_err)))
+def aluminium_width():
+    return material_width('thr10aluminum1143.itx', 'Aluminium')
+
+
+def mylar_width():
+    return material_width('thr10Mylner1016.itx', 'Mylar')
+
+
+def get_material_energies(peaks, peak_err):
+    energies, energy_errors = zip(*(channel_to_energy(peak, err) for peak, err in zip(peaks, peak_err)))
 
     print(pd.DataFrame(dict(energy=energies, sigma=energy_errors)))
 
@@ -145,8 +153,11 @@ if __name__ == '__main__':
     # peaks, peak_error = counts_spectrum()
     # energy_spectrum(peaks, peak_error)
 
-    peaks, peak_err = aluminium_width()
-    get_aluminium_energies(peaks, peak_err)
-    calc_aluminium_width()
+    # peaks, peak_err = aluminium_width()
+    # get_material_energies(peaks, peak_err)
+    # calc_aluminium_width()
+
+    peaks, peak_err = mylar_width()
+    get_material_energies(peaks, peak_err)
 
     plt.show()
