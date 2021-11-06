@@ -5,6 +5,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
+from channel_to_energy import channel_to_energy
 from peak_analysis import correct_mixed_peaks, find_peaks
 from read_input import read_counts_file
 from visualization import visualize_counts_plot
@@ -124,10 +125,28 @@ def aluminium_width(rebin_size=8):
     return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
 
 
+def get_aluminium_energies(al_peaks, peak_err):
+    energies, energy_errors = zip(*(channel_to_energy(peak, err) for peak, err in zip(al_peaks, peak_err)))
+
+    print(pd.DataFrame(dict(energy=energies, sigma=energy_errors)))
+
+
+def calc_aluminium_width(aluminium_density=2.700):
+    # from highest energy to lowest
+    shifted_range = np.array([0.009762, 0.00533, 0.00443, 0.003908, 0.003226, 0.002817, 0.002349])
+    orig_range = np.array([0.01357, 0.0091, 0.008131, 0.00768, 0.007008, 0.006544, 0.0064])
+
+    aluminium_width = (orig_range - shifted_range) / aluminium_density
+    print(f'Aluminium widths[micro-m] for different energies: {aluminium_width * 1000}')
+    print(f'Aluminium width: {np.mean(aluminium_width) * 1000:.2f}[micro-m]')
+
+
 if __name__ == '__main__':
     # peaks, peak_error = counts_spectrum()
     # energy_spectrum(peaks, peak_error)
 
-    aluminium_width()
+    peaks, peak_err = aluminium_width()
+    get_aluminium_energies(peaks, peak_err)
+    calc_aluminium_width()
 
     plt.show()
