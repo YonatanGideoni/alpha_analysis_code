@@ -1,3 +1,5 @@
+from math import ceil
+
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -36,7 +38,9 @@ def annotate_peaks(data, peaks, rebin_size, energy_label='E'):
 
         peak_text = f'${energy_label}$={energy}[keV]\n' \
                     f'$\mu$={rebin_size * peak:.1f}$\pm${1. / 3 * rebin_size:.1f}'
-        plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center', fontsize=10)
+        text = plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center',
+                        fontsize=10)
+        text.set_bbox(dict(alpha=0.5, facecolor='white', edgecolor='none'))
 
 
 def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
@@ -44,6 +48,16 @@ def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
     print(f'Original peaks loc: {mixed_peaks}, refined loc: {refined_mixed_peaks}')
 
     return refined_mixed_peaks
+
+
+def setup_plot(data, rebin_size, title, xtick_every=100):
+    plt.legend(fontsize=12)
+
+    ticks = np.arange(0, data.index.max() + xtick_every % rebin_size, xtick_every // rebin_size)
+    plt.xticks(ticks, labels=map(str, ticks * rebin_size), fontsize=12)
+    plt.yticks(fontsize=12)
+
+    plt.title(title, fontsize=15)
 
 
 def counts_spectrum(rebin_size=2):
@@ -58,15 +72,9 @@ def counts_spectrum(rebin_size=2):
 
     refined_mixed_peaks = get_refined_peaks(peaks[:2], data, rebin_size, 8)
 
-    plt.legend(fontsize=12)
+    setup_plot(data, rebin_size, '$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum')
 
-    plt.xticks(np.arange(0, data.index.max(), 100 // rebin_size),
-               labels=map(str, np.arange(0, data.index.max() * rebin_size, 100)),
-               fontsize=12)
-    plt.yticks(fontsize=12)
     plt.xlim(1000 // rebin_size, 2000 // rebin_size)
-
-    plt.title('$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum', fontsize=15)
 
     return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
 
@@ -109,12 +117,11 @@ def aluminium_width(rebin_size=8):
 
     annotate_peaks(data, peaks, rebin_size, energy_label='E_0')
 
-    refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
+    # refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
 
-    plt.xticks(np.arange(0, data.index.max(), 32 // rebin_size),
-               labels=map(str, np.arange(0, data.index.max() * rebin_size, 32)),
-               fontsize=12)
-    plt.yticks(fontsize=12)
+    setup_plot(data, rebin_size, '$^{228}$Th Decay Spectrum with Aluminium Foil Blockage', xtick_every=40)
+
+    return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
 
 
 if __name__ == '__main__':
