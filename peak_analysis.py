@@ -69,7 +69,7 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, p
             continue
 
         fitted_gaussian_data = area_based_gaussian(channels, *params)
-        chi_sq = ((fitted_gaussian_data - energy_spectrum) ** 2 / energy_spectrum).sum()
+        chi_sq = ((fitted_gaussian_data - energy_spectrum) ** 2 / fitted_gaussian_data).sum()
         dof = len(energy_spectrum) - len(params)
         p_val[i] = 1 - stats.chi2.cdf(chi_sq, dof)
 
