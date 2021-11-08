@@ -50,28 +50,5 @@ def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
     return params, cov_mat
 
 
-def correct_mixed_peaks(data: pd.Series, mixed_peaks: list, delta=8, interp_channel_density=1000) -> list:
-    min_peak, max_peak = min(mixed_peaks), max(mixed_peaks)
-
-    dense_channels = np.linspace(min_peak - delta, max_peak + delta,
-                                 num=(max_peak - min_peak + 2 * delta) * interp_channel_density)
-    dense_gaussians_data = pd.Series(0, index=dense_channels)
-
-    single_peaks = []
-    for peak in mixed_peaks:
-        params, cov_mat = fit_gaussian_to_peak(data, peak, delta)
-        dense_gaussians_data += area_based_gaussian(dense_channels, *params)
-
-        single_peaks.append(params[-1])
-
-    # numerically find where the double-gaussian's shifted peaks are located
-    shifted_peaks = find_peaks(dense_gaussians_data)[0] / interp_channel_density + min_peak - delta
-
-    delta_peaks = [single_peak - shifted_peak for single_peak, shifted_peak in zip(single_peaks, shifted_peaks)]
-    corrected_peaks = [mixed_peak + delta_peak for mixed_peak, delta_peak in zip(mixed_peaks, delta_peaks)]
-
-    return corrected_peaks
-
-
 if __name__ == '__main__':
     pass
