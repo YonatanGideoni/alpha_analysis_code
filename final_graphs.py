@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
 from channel_to_energy import channel_to_energy
-from peak_analysis import correct_mixed_peaks, find_peaks
+from peak_analysis import find_peaks
 from read_input import read_counts_file
 from visualization import visualize_counts_plot
 
@@ -54,7 +54,7 @@ def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
 def setup_plot(data, rebin_size, title, xtick_every=100):
     plt.legend(fontsize=12)
 
-    ticks = np.arange(0, data.index.max() + xtick_every % rebin_size, xtick_every // rebin_size)
+    ticks = np.arange(0, data.index.max(), xtick_every // rebin_size)
     plt.xticks(ticks, labels=map(str, ticks * rebin_size), fontsize=12)
     plt.yticks(fontsize=12)
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     # get_material_energies(peaks, peak_err)
     # calc_aluminium_width()
 
-    peaks, peak_err = mylar_width()
-    get_material_energies(peaks, peak_err)
+    # peaks, peak_err = mylar_width()
+    # get_material_energies(peaks, peak_err)
 
     plt.show()
