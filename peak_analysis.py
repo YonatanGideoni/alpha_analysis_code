@@ -48,7 +48,7 @@ def fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, init_sigma=5, 
     return params, cov_mat
 
 
-def fit_gaussian_via_chisq(data, peak_channel, right_delta=15, left_delta=None, plot=False):
+def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, plot=False):
     if left_delta is not None:
         energy_spectrum = data.iloc[peak_channel - left_delta:peak_channel + right_delta + 1]
         channels = np.arange(peak_channel - left_delta, peak_channel + right_delta + 1)
@@ -56,17 +56,24 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=15, left_delta=None, 
 
     deltas = np.arange(1, right_delta)
     p_val = np.zeros_like(deltas)
+    right_delta = min(right_delta, np.argmax(data.iloc[peak_channel:] == 0) - 1)
     for i, delta in enumerate(deltas):
+        if data.iloc[peak_channel - delta] == 0:
+            break
+
         energy_spectrum = data.iloc[peak_channel - delta:peak_channel + right_delta + 1]
         channels = np.arange(peak_channel - delta, peak_channel + right_delta + 1)
-        params, cov_mat = fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, plot=plot)
+        try:
+            params, cov_mat = fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, plot=plot)
+        except RuntimeError:
+            continue
 
         fitted_gaussian_data = area_based_gaussian(channels, *params)
         chi_sq = ((fitted_gaussian_data - energy_spectrum) ** 2 / energy_spectrum).sum()
         dof = len(energy_spectrum) - len(params)
         p_val[i] = 1 - stats.chi2.cdf(chi_sq, dof)
 
-        print(f'Left delta={left_delta}=>chi^2={chi_sq:.2f}, p={p_val[i]:.2f}')
+        print(f'Left delta={delta}=>chi^2={chi_sq:.2f}, p={p_val[i]:.2f}')
 
 
 if __name__ == '__main__':
