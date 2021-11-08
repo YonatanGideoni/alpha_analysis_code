@@ -2,7 +2,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
-from scipy import signal
+from scipy import signal, stats
 from scipy.optimize import curve_fit
 from scipy.stats import linregress
 
@@ -27,13 +27,11 @@ def area_based_double_gaussians(x, I1, s1, u1, I2, u2, s2):
            (I2 / ((2 * np.pi) ** 0.5 * s2)) * np.exp(-(x - u2) ** 2 / (2 * s2 ** 2))
 
 
-def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
-    channels = np.arange(peak_channel - delta, peak_channel + delta + 1)
-    energy_spectrum = data.iloc[peak_channel - delta:peak_channel + delta + 1]
-
+def fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, init_sigma=5, plot=False):
     area_init_guess = energy_spectrum.sum()
     params, cov_mat = curve_fit(area_based_gaussian, channels, energy_spectrum,
-                                p0=[area_init_guess, delta, peak_channel], bounds=[0, np.inf])
+                                p0=[area_init_guess, init_sigma, peak_channel], bounds=[0, np.inf],
+                                sigma=energy_spectrum ** 0.5)
     I, s, u = params
 
     if plot:
@@ -41,7 +39,7 @@ def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
         dense_channels = np.linspace(channels.min(), channels.max())
         plt.plot(dense_channels, area_based_gaussian(dense_channels, I, s, u), linewidth=3, c=colour)
 
-        spread_channels = np.linspace(channels.min() - delta, channels.max() + delta)
+        spread_channels = np.linspace(channels.min() - init_sigma, channels.max() + init_sigma)
         plt.plot(spread_channels, area_based_gaussian(spread_channels, I, s, u), linewidth=2, c=colour,
                  linestyle='dashed')
 
@@ -50,27 +48,32 @@ def fit_gaussian_to_peak(data, peak_channel, delta=8, plot=False):
     return params, cov_mat
 
 
-def correct_mixed_peaks(data: pd.Series, mixed_peaks: list, delta=8, interp_channel_density=1000) -> list:
-    min_peak, max_peak = min(mixed_peaks), max(mixed_peaks)
+def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, plot=False):
+    if left_delta is not None:
+        energy_spectrum = data.iloc[peak_channel - left_delta:peak_channel + right_delta + 1]
+        channels = np.arange(peak_channel - left_delta, peak_channel + right_delta + 1)
+        return fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, plot=plot)
 
-    dense_channels = np.linspace(min_peak - delta, max_peak + delta,
-                                 num=(max_peak - min_peak + 2 * delta) * interp_channel_density)
-    dense_gaussians_data = pd.Series(0, index=dense_channels)
+    deltas = np.arange(1, right_delta)
+    p_val = np.zeros_like(deltas)
+    right_delta = min(right_delta, np.argmax(data.iloc[peak_channel:] == 0) - 1)
+    for i, delta in enumerate(deltas):
+        if data.iloc[peak_channel - delta] == 0:
+            break
 
-    single_peaks = []
-    for peak in mixed_peaks:
-        params, cov_mat = fit_gaussian_to_peak(data, peak, delta)
-        dense_gaussians_data += area_based_gaussian(dense_channels, *params)
+        energy_spectrum = data.iloc[peak_channel - delta:peak_channel + right_delta + 1]
+        channels = np.arange(peak_channel - delta, peak_channel + right_delta + 1)
+        try:
+            params, cov_mat = fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, plot=plot)
+        except RuntimeError:
+            continue
 
-        single_peaks.append(params[-1])
+        fitted_gaussian_data = area_based_gaussian(channels, *params)
+        chi_sq = ((fitted_gaussian_data - energy_spectrum) ** 2 / fitted_gaussian_data).sum()
+        dof = len(energy_spectrum) - len(params)
+        p_val[i] = 1 - stats.chi2.cdf(chi_sq, dof)
 
-    # numerically find where the double-gaussian's shifted peaks are located
-    shifted_peaks = find_peaks(dense_gaussians_data)[0] / interp_channel_density + min_peak - delta
-
-    delta_peaks = [single_peak - shifted_peak for single_peak, shifted_peak in zip(single_peaks, shifted_peaks)]
-    corrected_peaks = [mixed_peak + delta_peak for mixed_peak, delta_peak in zip(mixed_peaks, delta_peaks)]
-
-    return corrected_peaks
+        print(f'Left delta={delta}=>chi^2={chi_sq:.2f}, p={p_val[i]:.2f}')
 
 
 if __name__ == '__main__':

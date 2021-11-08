@@ -1,7 +1,11 @@
+from math import ceil
+
 import numpy as np
+import pandas as pd
 from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
+from channel_to_energy import channel_to_energy
 from peak_analysis import correct_mixed_peaks, find_peaks
 from read_input import read_counts_file
 from visualization import visualize_counts_plot
@@ -9,41 +13,69 @@ from visualization import visualize_counts_plot
 ENERGIES = np.array([5340.36, 5423.15, 5685.37, 6050.78, 6288.08, 6778.3, 8784.86])
 
 
-def counts_spectrum(rebin_size=2):
-    data = read_counts_file('thr10sync1303.itx')
+def load_data(path: str, rebin_size):
+    data = read_counts_file(path)
     data.iloc[:10] = 0
-
     data = data.groupby(data.index // rebin_size).apply(sum)
 
-    visualize_counts_plot(data, plot_peaks=False, data_label='Raw Data', normalize=False)
+    return data
 
-    peaks, _ = find_peaks(data, max_rel_peak_size=6., min_peak_dist=15 // rebin_size)
+
+def get_peaks(data: pd.Series, max_rel_size, min_dist, rebin_size, plot=True):
+    peaks, _ = find_peaks(data, max_rel_peak_size=max_rel_size, min_peak_dist=min_dist // rebin_size)
     print(f'Num peaks: {len(peaks)}')
 
-    data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
+    if plot:
+        data.where(data.index.isin(peaks), 0).plot.bar(label='Local Maximum Peaks', color='r', ax=plt.gca(), width=1.)
 
+    return peaks
+
+
+def annotate_peaks(data, peaks, rebin_size, energy_label='E'):
     arrow_dy = data.max() / 15
     for peak, energy in zip(peaks, ENERGIES):
         arrow_start_y = data.iloc[peak] + arrow_dy + 15
         plt.arrow(peak, arrow_start_y, dx=0, dy=-arrow_dy, color='r', width=0.1, head_width=10)
 
-        peak_text = f'$E$={energy}[keV]\n' \
-                    f'$\mu$={peak:.1f}$\pm${1. / 3 * rebin_size:.1f}'
-        plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center', fontsize=10)
+        peak_text = f'${energy_label}$={energy}[keV]\n' \
+                    f'$\mu$={rebin_size * peak:.1f}$\pm${1. / 3 * rebin_size:.1f}'
+        text = plt.text(peak, arrow_start_y, peak_text, ha='right' if energy == min(ENERGIES) else 'center',
+                        fontsize=10)
+        text.set_bbox(dict(alpha=0.5, facecolor='white', edgecolor='none'))
 
-    mixed_peaks = peaks[:2]
-    refined_mixed_peaks = correct_mixed_peaks(data, mixed_peaks, delta=8 // rebin_size)
+
+def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
+    refined_mixed_peaks = correct_mixed_peaks(data, mixed_peaks, delta=delta // rebin_size)
     print(f'Original peaks loc: {mixed_peaks}, refined loc: {refined_mixed_peaks}')
 
+    return refined_mixed_peaks
+
+
+def setup_plot(data, rebin_size, title, xtick_every=100):
     plt.legend(fontsize=12)
 
-    plt.xticks(np.arange(0, data.index.max(), 100 // rebin_size),
-               labels=map(str, np.arange(0, data.index.max() * rebin_size, 100)),
-               fontsize=12)
+    ticks = np.arange(0, data.index.max() + xtick_every % rebin_size, xtick_every // rebin_size)
+    plt.xticks(ticks, labels=map(str, ticks * rebin_size), fontsize=12)
     plt.yticks(fontsize=12)
-    plt.xlim(1000 // rebin_size, 2000 // rebin_size)
 
-    plt.title('$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum', fontsize=15)
+    plt.title(title, fontsize=15)
+
+
+def counts_spectrum(rebin_size=2):
+    data = load_data('thr10sync1303.itx', rebin_size)
+
+    visualize_counts_plot(data, plot_peaks=False, data_label='Raw Data', normalize=False)
+
+    peaks = get_peaks(data, max_rel_size=6., min_dist=15, rebin_size=rebin_size)
+    print(f'Num peaks: {len(peaks)}')
+
+    annotate_peaks(data, peaks, rebin_size)
+
+    refined_mixed_peaks = get_refined_peaks(peaks[:2], data, rebin_size, 8)
+
+    setup_plot(data, rebin_size, '$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum')
+
+    plt.xlim(1000 // rebin_size, 2000 // rebin_size)
 
     return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
 
@@ -77,9 +109,55 @@ def energy_spectrum(peaks: list, peak_error: list):
     print(f'{chi_square=:.2f}')
 
 
-if __name__ == '__main__':
-    peaks, peak_error = counts_spectrum()
+def material_width(path: str, material_name, rebin_size=8):
+    data = load_data(path, rebin_size)
 
-    energy_spectrum(peaks, peak_error)
+    visualize_counts_plot(data, normalize=False, plot_peaks=False)
+
+    peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
+
+    annotate_peaks(data, peaks, rebin_size, energy_label='E_0')
+
+    # refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
+
+    setup_plot(data, rebin_size, f'$^{{228}}$Th Decay Spectrum with {material_name} Foil Blockage', xtick_every=40)
+
+    return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
+
+
+def aluminium_width():
+    return material_width('thr10aluminum1143.itx', 'Aluminium')
+
+
+def mylar_width():
+    return material_width('thr10Mylner1016.itx', 'Mylar')
+
+
+def get_material_energies(peaks, peak_err):
+    energies, energy_errors = zip(*(channel_to_energy(peak, err) for peak, err in zip(peaks, peak_err)))
+
+    print(pd.DataFrame(dict(energy=energies, sigma=energy_errors)))
+
+
+def calc_aluminium_width(aluminium_density=2.700):
+    # from highest energy to lowest
+    shifted_range = np.array([0.009762, 0.00533, 0.00443, 0.003908, 0.003226, 0.002817, 0.002349])
+    orig_range = np.array([0.01357, 0.0091, 0.008131, 0.00768, 0.007008, 0.006544, 0.0064])
+
+    aluminium_width = (orig_range - shifted_range) / aluminium_density
+    print(f'Aluminium widths[micro-m] for different energies: {aluminium_width * 1000}')
+    print(f'Aluminium width: {np.mean(aluminium_width) * 1000:.2f}[micro-m]')
+
+
+if __name__ == '__main__':
+    # peaks, peak_error = counts_spectrum()
+    # energy_spectrum(peaks, peak_error)
+
+    # peaks, peak_err = aluminium_width()
+    # get_material_energies(peaks, peak_err)
+    # calc_aluminium_width()
+
+    peaks, peak_err = mylar_width()
+    get_material_energies(peaks, peak_err)
 
     plt.show()
