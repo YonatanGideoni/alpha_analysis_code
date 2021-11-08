@@ -87,7 +87,7 @@ def energy_spectrum(peaks: list, peak_error: list):
     plt.errorbar(ENERGIES, peaks, yerr=peak_error, fmt='o', ecolor='r', linestyle='None', label='Data')
 
     params, cov_mat = curve_fit(lambda x, a, b: (x - b) / a, ENERGIES, peaks)
-    print(f'a={params[0]}, b={params[1]}, \n{cov_mat=}')
+    print(f'a={params[0]}, b={params[1]}, \n{cov_mat}')
 
     energies = np.linspace(min(ENERGIES) * 0.99, max(ENERGIES) * 1.01)
     plt.plot(energies, (energies - params[1]) / params[0], c="k", label='Linear fit')
@@ -106,7 +106,7 @@ def energy_spectrum(peaks: list, peak_error: list):
 
     peaks = np.array(peaks)
     chi_square = ((peaks - (ENERGIES - params[1]) / params[0]) ** 2 / np.array(peak_error) ** 2).sum()
-    print(f'{chi_square=:.2f}')
+    print(f'{chi_square:.2f}')
 
 
 def material_width(path: str, material_name, rebin_size=8):
