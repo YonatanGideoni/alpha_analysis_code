@@ -119,7 +119,7 @@ def energy_spectrum(peaks: list, peak_error: list):
 
     peaks = np.array(peaks)
     chi_square = ((peaks - (ENERGIES - params[1]) / params[0]) ** 2 / np.array(peak_error) ** 2).sum()
-    print(f'{chi_square=:.2f}')
+    print(f'{chi_square:.2f}')
 
 
 def material_width(path: str, material_name, rebin_size=8):

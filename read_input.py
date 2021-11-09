@@ -31,8 +31,12 @@ def read_counts_file_time(path: str, max_row=2048) -> pd.Series:
     return delta_t, tot_delta_t
 
 
+
+
+
+
 if __name__ == '__main__':
     print('h')
     #df = read_counts_file("thr45measurement1104.itx")
-    #delta_t = read_counts_file_time("thr45measurement1104.itx")
+    #delta_t = read_counts_file_time("thr30unknown1157.itx")
     #print(delta_t)
