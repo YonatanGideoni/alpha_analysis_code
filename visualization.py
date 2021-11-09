@@ -28,9 +28,6 @@ def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5,
     plt.legend()
 
 
-def plot_peak_info(peak_channel, peak_height, area, std, mean, area_std, std_std, mean_std, text_height_mul=1.05):
-    peak_text = f"$\mu$={mean:.1f}$\pm${mean_std:.1f}\n" \
-                f"$\sigma$={std:.2f}$\pm${std_std:.2f}\n" \
-                f"Area={area:.3f}$\pm${area_std:.3f}"
-    plt.annotate(peak_text, xy=(peak_channel, peak_height), ha='center')
-    print('hi')
+def plot_peak_info(peak_channel, peak_height, mean, mean_std, text_offset=20):
+    peak_text = f"$\mu$={mean:.1f}$\pm${mean_std:.1f}"
+    plt.annotate(peak_text, xy=(peak_channel, peak_height + text_offset), ha='center')

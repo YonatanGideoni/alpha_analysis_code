@@ -43,7 +43,7 @@ def fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, init_sigma=5, 
         plt.plot(spread_channels, area_based_gaussian(spread_channels, I, s, u), linewidth=2, c=colour,
                  linestyle='dashed')
 
-        plot_peak_info(peak_channel, energy_spectrum.max(), I, s, u, *np.diagonal(cov_mat) ** 0.5)
+        plot_peak_info(peak_channel, energy_spectrum.max(), u, )
 
     return params, cov_mat
 
@@ -77,7 +77,7 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, p
         fitted_gaussian_data = area_based_gaussian(channels, *params)
         chi_sq = ((fitted_gaussian_data - energy_spectrum) ** 2 / fitted_gaussian_data).sum()
         dof = len(energy_spectrum) - len(params)
-        p_val[i] = stats.chi2.sf(chi_sq, dof)
+        p_val[i] = 1 - stats.chi2.sf(chi_sq, dof)
         if min_p_val < p_val[i] < max_p_val:
             best_params = params
             best_cov_mat = cov_mat
