@@ -134,7 +134,7 @@ if __name__ == '__main__':
     # print('p(chi^2<13.245)=0.79')
     data = read_counts_file("thr30unknown1157.itx")
     peaks, heights = find_peaks(data, max_rel_peak_size=20., min_peak_dist=20)
-    right_deltas = [4, 5, 9, 7]
+    right_deltas = [4, 5, 5, 7]
     for peak, right_delta in zip(peaks, right_deltas):
         print(fit_gaussian_via_chisq(data, peak,
                                      right_delta=right_delta,
