@@ -107,6 +107,24 @@ def multi_measurment(vals, stds):
     print(str(mean) + ' +- ' + str(std))
     return mean, std
 
+def change_later():
+    data = read_counts_file("thr30unknown1157.itx")
+    peaks, heights = find_peaks(data, max_rel_peak_size=20., min_peak_dist=20)
+    right_deltas = [4, 5, 6, 7]
+    peak_ind = 2
+    peaks_loc = []
+    peaks_std = []
+    for peak, right_delta in zip(peaks, right_deltas):
+        params, cov_mat, p_val, relevant_channels, delta_peak = fit_gaussian_via_chisq(data, peak,
+                                                                                       right_delta=right_delta,
+                                                                                       plot=False, verbose=True)
+        peak_channel = params[peak_ind]
+        peaks_loc.append(peak_channel)
+        peak_loc_std = (cov_mat[peak_ind, peak_ind] + (delta_peak / 2) ** 2) ** 0.5
+        peaks_std.append(peak_loc_std)
+    print(peaks_loc)
+    print(peaks_std)
+
 
 if __name__ == '__main__':
     # multi_measurment(np.array([31.25,34.95]), np.array([2.55,1.97]))
@@ -116,7 +134,7 @@ if __name__ == '__main__':
     # print('p(chi^2<13.245)=0.79')
     data = read_counts_file("thr30unknown1157.itx")
     peaks, heights = find_peaks(data, max_rel_peak_size=20., min_peak_dist=20)
-    right_deltas = [4, 5, 6, 7]
+    right_deltas = [4, 5, 9, 7]
     for peak, right_delta in zip(peaks, right_deltas):
         print(fit_gaussian_via_chisq(data, peak,
                                      right_delta=right_delta,
