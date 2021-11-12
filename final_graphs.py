@@ -11,6 +11,11 @@ from read_input import read_counts_file
 from visualization import visualize_counts_plot, plot_peak_info
 
 ENERGIES = np.array([5340.36, 5423.15, 5685.37, 6050.78, 6288.08, 6778.3, 8784.86])
+ALUMINIUM_DATA = [(7100.113502915274, 10.80693204057931),
+                  (4694.607403578711, 29.304353606761204),
+                  (4044.658159431042, 37.01727400211632),
+                  (3246.6777707088163, 32.40134859076136),
+                  (2876.599909272422, 44.73552183010315)]
 
 
 def load_data(path: str, rebin_size):
@@ -51,11 +56,17 @@ def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
     return refined_mixed_peaks
 
 
-def setup_plot(data, rebin_size, title, xtick_every=100):
+def setup_plot(data, rebin_size, title, xtick_every=100, energy_x_axis=False):
     plt.legend(fontsize=12)
 
-    ticks = np.arange(0, data.index.max(), xtick_every // rebin_size)
-    plt.xticks(ticks, labels=map(str, ticks * rebin_size), fontsize=12)
+    if energy_x_axis:
+        labels = list(map(lambda x: str(int(x)), np.arange(0, max(ENERGIES) * 1.1, xtick_every)))
+        ticks = np.linspace(0, data.index.max(), len(labels))
+    else:
+        ticks = np.arange(0, data.index.max(), xtick_every // rebin_size)
+        labels = map(str, ticks * rebin_size)
+
+    plt.xticks(ticks, labels=labels, fontsize=12)
     plt.yticks(fontsize=12)
 
     plt.title(title, fontsize=15)
@@ -124,22 +135,18 @@ def energy_spectrum(peaks: list, peak_error: list):
     print(f'chi^2={chi_square:.2f}')
 
 
-def material_width(path: str, material_name, rebin_size=8):
-    data = load_data(path, rebin_size)
+def material_width(path: str, material_name, energies):
+    data = read_counts_file(path)
+    data.iloc[:10] = 0
 
     visualize_counts_plot(data, normalize=False, plot_peaks=False)
 
-    peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
-
-    annotate_peaks(data, peaks, rebin_size, energy_label='E_0')
-
-    setup_plot(data, rebin_size, f'$^{{228}}$Th Decay Spectrum with {material_name} Foil Blockage', xtick_every=40)
-
-    return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
+    setup_plot(data, 1, f'$^{{228}}$Th Decay Spectrum with {material_name} Foil Blockage', xtick_every=500,
+               energy_x_axis=True)
 
 
 def aluminium_width():
-    return material_width('thr10aluminum1143.itx', 'Aluminium')
+    return material_width('thr10aluminum1143.itx', 'Aluminium', ALUMINIUM_DATA)
 
 
 def mylar_width():
@@ -163,11 +170,10 @@ def calc_aluminium_width(aluminium_density=2.700):
 
 
 if __name__ == '__main__':
-    peaks, peak_error = counts_spectrum()
-    energy_spectrum(peaks, peak_error)
+    # peaks, peak_error = counts_spectrum()
+    # energy_spectrum(peaks, peak_error)
 
-    # peaks, peak_err = aluminium_width()
-    # get_material_energies(peaks, peak_err)
+    aluminium_width()
     # calc_aluminium_width()
 
     # peaks, peak_err = mylar_width()
