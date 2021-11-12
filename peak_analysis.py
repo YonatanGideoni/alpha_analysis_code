@@ -43,20 +43,26 @@ def fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, init_sigma=5, 
         plt.plot(spread_channels, area_based_gaussian(spread_channels, I, s, u), linewidth=2, c=colour,
                  linestyle='dashed')
 
-        plot_peak_info(peak_channel, energy_spectrum.max(), I, s, u, *np.diagonal(cov_mat) ** 0.5)
+        plot_peak_info(peak_channel, energy_spectrum.max(), u, )
 
     return params, cov_mat
 
 
-def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, plot=False):
+def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, plot=False, verbose=False,
+                           max_p_val=0.9, min_p_val=0.1, max_left_delta=8):
     if left_delta is not None:
         energy_spectrum = data.iloc[peak_channel - left_delta:peak_channel + right_delta + 1]
         channels = np.arange(peak_channel - left_delta, peak_channel + right_delta + 1)
         return fit_gaussian_to_peak(energy_spectrum, channels, peak_channel, plot=plot)
 
-    deltas = np.arange(1, right_delta)
-    p_val = np.zeros_like(deltas)
+    deltas = np.arange(1, max_left_delta)
+    p_val = np.zeros_like(deltas, dtype=float)
     right_delta = min(right_delta, np.argmax(data.iloc[peak_channel:] == 0) - 1)
+
+    best_params = None
+    best_cov_mat = None
+    final_p_val = np.inf
+    chosen_channels = None
     for i, delta in enumerate(deltas):
         if data.iloc[peak_channel - delta] == 0:
             break
@@ -71,9 +77,17 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, p
         fitted_gaussian_data = area_based_gaussian(channels, *params)
         chi_sq = ((fitted_gaussian_data - energy_spectrum) ** 2 / fitted_gaussian_data).sum()
         dof = len(energy_spectrum) - len(params)
-        p_val[i] = 1 - stats.chi2.cdf(chi_sq, dof)
+        p_val[i] = 1 - stats.chi2.sf(chi_sq, dof)
+        if min_p_val < p_val[i] < max_p_val:
+            best_params = params
+            best_cov_mat = cov_mat
+            final_p_val = p_val[i]
+            chosen_channels = channels
 
-        print(f'Left delta={delta}=>chi^2={chi_sq:.2f}, p={p_val[i]:.2f}')
+        if verbose:
+            print(f'Left delta={delta}=>chi^2={chi_sq:.2f}, p={p_val[i]:.2f}')
+
+    return best_params, best_cov_mat, final_p_val, chosen_channels
 
 
 if __name__ == '__main__':

@@ -6,9 +6,9 @@ from matplotlib import pyplot as plt
 from scipy.optimize import curve_fit
 
 from channel_to_energy import channel_to_energy
-from peak_analysis import correct_mixed_peaks, find_peaks
+from peak_analysis import find_peaks, area_based_gaussian, fit_gaussian_via_chisq
 from read_input import read_counts_file
-from visualization import visualize_counts_plot
+from visualization import visualize_counts_plot, plot_peak_info
 
 ENERGIES = np.array([5340.36, 5423.15, 5685.37, 6050.78, 6288.08, 6778.3, 8784.86])
 
@@ -54,30 +54,43 @@ def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
 def setup_plot(data, rebin_size, title, xtick_every=100):
     plt.legend(fontsize=12)
 
-    ticks = np.arange(0, data.index.max() + xtick_every % rebin_size, xtick_every // rebin_size)
+    ticks = np.arange(0, data.index.max(), xtick_every // rebin_size)
     plt.xticks(ticks, labels=map(str, ticks * rebin_size), fontsize=12)
     plt.yticks(fontsize=12)
 
     plt.title(title, fontsize=15)
 
 
-def counts_spectrum(rebin_size=2):
-    data = load_data('thr10sync1303.itx', rebin_size)
+def counts_spectrum():
+    data = read_counts_file("thr10sync1303.itx")
+    visualize_counts_plot(data, plot_peaks=False, normalize=False)
 
-    visualize_counts_plot(data, plot_peaks=False, data_label='Raw Data', normalize=False)
+    peaks, _ = find_peaks(data, max_rel_peak_size=6.)
+    peak_ind = 2
+    right_deltas = [3, 4, 4, 9, 7, 6, 7]
+    text_height_offset = [25, 60, 5, 5, 40, 35, 10]
 
-    peaks = get_peaks(data, max_rel_size=6., min_dist=15, rebin_size=rebin_size)
-    print(f'Num peaks: {len(peaks)}')
+    peaks_loc = []
+    peaks_std = []
+    for peak, right_delta, height_offset in zip(peaks, right_deltas, text_height_offset):
+        params, cov_mat, p_val, relevant_channels = fit_gaussian_via_chisq(data, peak, right_delta=right_delta,
+                                                                           plot=False, verbose=False)
 
-    annotate_peaks(data, peaks, rebin_size)
+        dense_relevant_channels = np.linspace(min(relevant_channels), max(relevant_channels))
+        plt.plot(dense_relevant_channels, area_based_gaussian(dense_relevant_channels, *params), c='k')
 
-    refined_mixed_peaks = get_refined_peaks(peaks[:2], data, rebin_size, 8)
+        peak_channel = params[peak_ind]
+        peaks_loc.append(peak_channel)
+        peak_height = data.iloc[int(peak_channel) - 1:int(peak_channel) + 1].max()
+        peak_loc_std = cov_mat[peak_ind, peak_ind] ** 0.5
+        peaks_std.append(peak_loc_std)
+        plot_peak_info(peak_channel, peak_height, peak_channel, peak_loc_std, height_offset)
 
-    setup_plot(data, rebin_size, '$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum')
+    setup_plot(data, 1, '$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum')
 
-    plt.xlim(1000 // rebin_size, 2000 // rebin_size)
+    plt.xlim(1000, 2000)
 
-    return np.array(peaks) * rebin_size, [1. / 3 * rebin_size] * len(peaks)
+    return peaks_loc, peaks_std
 
 
 def energy_spectrum(peaks: list, peak_error: list):
@@ -86,8 +99,8 @@ def energy_spectrum(peaks: list, peak_error: list):
     plt.grid(zorder=-10)
     plt.errorbar(ENERGIES, peaks, yerr=peak_error, fmt='o', ecolor='r', linestyle='None', label='Data')
 
-    params, cov_mat = curve_fit(lambda x, a, b: (x - b) / a, ENERGIES, peaks)
-    print(f'a={params[0]}, b={params[1]}, \n{cov_mat}')
+    params, cov_mat = curve_fit(lambda x, a, b: (x - b) / a, ENERGIES, peaks, sigma=peak_error)
+    print(f'a={params[0]}, b={params[1]}, \n{cov_mat=}')
 
     energies = np.linspace(min(ENERGIES) * 0.99, max(ENERGIES) * 1.01)
     plt.plot(energies, (energies - params[1]) / params[0], c="k", label='Linear fit')
@@ -150,14 +163,14 @@ def calc_aluminium_width(aluminium_density=2.700):
 
 
 if __name__ == '__main__':
-    # peaks, peak_error = counts_spectrum()
-    # energy_spectrum(peaks, peak_error)
+    peaks, peak_error = counts_spectrum()
+    energy_spectrum(peaks, peak_error)
 
     # peaks, peak_err = aluminium_width()
     # get_material_energies(peaks, peak_err)
     # calc_aluminium_width()
 
-    peaks, peak_err = mylar_width()
-    get_material_energies(peaks, peak_err)
+    # peaks, peak_err = mylar_width()
+    # get_material_energies(peaks, peak_err)
 
     plt.show()
