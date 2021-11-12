@@ -1,9 +1,9 @@
 import numpy as np
 
 
-def channel_to_energy(channel, channel_sigma, slope=4.626433105445935, intercept=-6.3360098597095735,
-                      cov_mat=np.array([[4.81596612e-05, -6.60200286e-02],
-                                        [-6.60200286e-02, 9.32438756e+01]])):
+def channel_to_energy(channel, channel_sigma, slope=4.62597326795493, intercept=-7.694423297476968,
+                      cov_mat=np.array([[3.15344153e-06, -4.12302781e-03],
+                                        [-4.12302781e-03, 5.50600867e+00]])):
     energy = slope * channel + intercept
 
     slope_sigma = cov_mat[0, 0] ** 0.5
