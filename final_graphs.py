@@ -49,13 +49,6 @@ def annotate_peaks(data, peaks, rebin_size, energy_label='E'):
         text.set_bbox(dict(alpha=0.5, facecolor='white', edgecolor='none'))
 
 
-def get_refined_peaks(mixed_peaks, data, rebin_size, delta):
-    refined_mixed_peaks = correct_mixed_peaks(data, mixed_peaks, delta=delta // rebin_size)
-    print(f'Original peaks loc: {mixed_peaks}, refined loc: {refined_mixed_peaks}')
-
-    return refined_mixed_peaks
-
-
 def setup_plot(data, rebin_size, title, xtick_every=100, energy_x_axis=False):
     plt.legend(fontsize=12)
 
@@ -135,14 +128,31 @@ def energy_spectrum(peaks: list, peak_error: list):
     print(f'chi^2={chi_square:.2f}')
 
 
-def material_width(path: str, material_name, energies):
-    data = read_counts_file(path)
-    data.iloc[:10] = 0
+def material_width(path: str, material_name, energies, rebin_size=5):
+    data = load_data(path, rebin_size=rebin_size)
 
     visualize_counts_plot(data, normalize=False, plot_peaks=False)
 
     setup_plot(data, 1, f'$^{{228}}$Th Decay Spectrum with {material_name} Foil Blockage', xtick_every=500,
                energy_x_axis=True)
+
+    for energy, energy_sigma in energies:
+        real_channel = (energy + 7.694423297476968) / 4.62597326795493
+        real_channel_sigma = (energy_sigma + 7.694423297476968) / 4.62597326795493
+
+        data_channel = int(real_channel // rebin_size)
+        data_channel_sigma = int(real_channel_sigma // rebin_size) + 1
+        peak_height = data.iloc[data_channel - data_channel_sigma * 2:data_channel + data_channel_sigma * 2].max()
+
+        plt.plot([(real_channel - real_channel_sigma) / rebin_size, (real_channel + real_channel_sigma) / rebin_size],
+                 [peak_height, peak_height], c='r', linewidth=2)
+
+        text = f'E={energy:.0f}$\pm${energy_sigma:.0f}[keV]'
+        textbox = plt.annotate(text, xy=(data_channel, peak_height + 5), ha='center')
+        textbox.set_bbox(dict(alpha=0.5, facecolor='white', edgecolor='none'))
+
+    plt.xlabel('Energy[keV]', fontsize=13)
+    plt.gca().legend().remove()
 
 
 def aluminium_width():

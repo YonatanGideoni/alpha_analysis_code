@@ -24,7 +24,7 @@ def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5,
     plt.xticks(np.arange(0, data.index.max(), 100))
 
     plt.xlabel("Channel", fontsize=14)
-    plt.ylabel(("Density" if normalize else "Counts") + 'per Channel', fontsize=14)
+    plt.ylabel(("Density" if normalize else "Counts") + ' per Channel', fontsize=14)
     plt.legend()
 
 
