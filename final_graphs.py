@@ -78,7 +78,8 @@ def counts_spectrum():
                                                                                        plot=False, verbose=False)
 
         dense_relevant_channels = np.linspace(min(relevant_channels), max(relevant_channels))
-        plt.plot(dense_relevant_channels, area_based_gaussian(dense_relevant_channels, *params), c='k')
+        plt.plot(dense_relevant_channels, area_based_gaussian(dense_relevant_channels, *params), c='k', linewidth=3,
+                 label=None if energy != min(ENERGIES) else 'Gaussian Fit')
 
         peak_channel = params[peak_ind]
         peaks_loc.append(peak_channel)

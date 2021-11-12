@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5, normalize=True, plot_peaks=True,
-                          alpha=1, c='darkblue', rolling_window=False, data_label='Raw Data'):
+                          alpha=1, c='blue', rolling_window=False, data_label='Raw Data'):
     if normalize:
         data /= data.sum()
 
@@ -24,10 +24,12 @@ def visualize_counts_plot(data: pd.Series, x_tick_every=100, rolling_avg_size=5,
     plt.xticks(np.arange(0, data.index.max(), 100))
 
     plt.xlabel("Channel", fontsize=14)
-    plt.ylabel("Density" if normalize else "Counts", fontsize=14)
+    plt.ylabel(("Density" if normalize else "Counts") + 'per Channel', fontsize=14)
     plt.legend()
 
 
-def plot_peak_info(peak_channel, peak_height, mean, mean_std, text_offset=20):
+def plot_peak_info(peak_channel, peak_height, mean, mean_std, text_offset=20, energy=None):
     peak_text = f"$\mu$={mean:.1f}$\pm${mean_std:.1f}"
+    if energy:
+        peak_text += f'\n$E=${energy:.2f}[keV]'
     plt.annotate(peak_text, xy=(peak_channel, peak_height + text_offset), ha='center')
