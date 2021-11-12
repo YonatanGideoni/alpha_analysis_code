@@ -60,6 +60,8 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, p
     right_delta = min(right_delta, np.argmax(data.iloc[peak_channel:] == 0) - 1)
 
     best_params = None
+    min_peak_channel = 99999
+    max_peak_channel = -min_peak_channel
     best_cov_mat = None
     final_p_val = np.inf
     chosen_channels = None
@@ -79,6 +81,9 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, p
         dof = len(energy_spectrum) - len(params)
         p_val[i] = 1 - stats.chi2.sf(chi_sq, dof)
         if min_p_val < p_val[i] < max_p_val:
+            min_peak_channel = min(params[-1], min_peak_channel)
+            max_peak_channel = max(params[-1], max_peak_channel)
+
             best_params = params
             best_cov_mat = cov_mat
             final_p_val = p_val[i]
@@ -87,7 +92,7 @@ def fit_gaussian_via_chisq(data, peak_channel, right_delta=4, left_delta=None, p
         if verbose:
             print(f'Left delta={delta}=>chi^2={chi_sq:.2f}, p={p_val[i]:.2f}')
 
-    return best_params, best_cov_mat, final_p_val, chosen_channels
+    return best_params, best_cov_mat, final_p_val, chosen_channels, max_peak_channel - min_peak_channel
 
 
 if __name__ == '__main__':
