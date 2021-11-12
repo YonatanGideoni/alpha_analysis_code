@@ -8,6 +8,8 @@ from visualization import visualize_counts_plot
 from channel_to_energy import channel_to_energy
 
 AREA_DELTA = 6
+
+
 def find_max(my_list):
     max = my_list[0]
     index = 0
@@ -35,9 +37,9 @@ def point_val(file_name):
     areas = [sum(list(data)[peak - AREA_DELTA:peak + AREA_DELTA + 1]) for peak in peaks]
     delta_t, tot_delta_t = read_counts_file_time(file_name)
     for ind_peak, peak in enumerate(peaks):
-        activities, delta_ts2, half_time, time_func_error,chi = files_lst(ind_peak)
+        activities, delta_ts2, half_time, time_func_error, chi = files_lst(ind_peak)
         write_data(ind_peak, peak, activities, delta_ts2, half_time, time_func_error)
-        print('chi = '+str(chi))
+        print('chi = ' + str(chi))
 
 
 def write_data(ind_peak, peak, activities, delta_ts2, half_time, time_func_error):
@@ -51,15 +53,16 @@ def max_point_activity(ind_peak, file_name):
     # heights = heights['peak_heights']
     # height = heights[ind_peak]
     peak = peaks[ind_peak]
-    area = sum(list(data)[peak-AREA_DELTA:peak+AREA_DELTA+1])
+    area = sum(list(data)[peak - AREA_DELTA:peak + AREA_DELTA + 1])
     delta_t, tot_delta_t = read_counts_file_time(file_name)
-    return area / delta_t, tot_delta_t, area**0.5/delta_t
+    return area / delta_t, tot_delta_t, area ** 0.5 / delta_t
 
 
 def helper(ind_peak):
     activities = [max_point_activity(ind_peak, file)[0] for file in os.listdir() if file.startswith("thr30unknown")]
     delta_ts2 = [max_point_activity(ind_peak, file)[1] for file in os.listdir() if file.startswith("thr30unknown")]
-    activities_errors = [max_point_activity(ind_peak, file)[2] for file in os.listdir() if file.startswith("thr30unknown")]
+    activities_errors = [max_point_activity(ind_peak, file)[2] for file in os.listdir() if
+                         file.startswith("thr30unknown")]
     # delta_ts = [sum(delta_ts_temp[:i]) for i in range(len(delta_ts_temp))]
 
     return activities, activities_errors, delta_ts2
@@ -70,7 +73,7 @@ def files_lst(ind_peak, plot_exp=True):
     # plt.plot(delta_ts, activities, '.')
     activities, activities_errors, delta_ts2 = helper(ind_peak)
     params, cov_mat = curve_fit(lambda x, a, l, b: a * np.exp(-x / l) + b, np.array(delta_ts2) / 60, activities,
-                                bounds=[0, 60],sigma=activities_errors)
+                                bounds=[0, 60], sigma=activities_errors)
     y = params[0] * np.exp(-np.array(delta_ts2) / (60 * params[1])) + params[2]
     if plot_exp:
         plt.errorbar(delta_ts2, activities, yerr=activities_errors, fmt='none', ecolor='r')
@@ -80,11 +83,11 @@ def files_lst(ind_peak, plot_exp=True):
         plt.ylabel('activity of max peak (num/sec')
         plt.figure()
     half_time = params[1] * np.log(2)
-    chi,chi_sum = chi_square(delta_ts2, activities,activities_errors,lambda x: params[0] * np.exp(-np.array(x) / (60 * params[1])) + params[2])
-    #time_errors = np.array(delta_ts_temp) / 2
-    time_func_error = np.log(2)*np.diagonal(cov_mat)[1] ** 0.5
+    chi, chi_sum = chi_square(delta_ts2, activities, activities_errors,
+                              lambda x: params[0] * np.exp(-np.array(x) / (60 * params[1])) + params[2])
+    # time_errors = np.array(delta_ts_temp) / 2
+    time_func_error = np.log(2) * np.diagonal(cov_mat)[1] ** 0.5
     return activities, delta_ts2, half_time, time_func_error, chi_sum
-
 
 
 def sync_errors():
@@ -136,12 +139,13 @@ def sync_errors():
     # delta_channel=channels-(np.array(energies)-params[1])/params[0]
 
 
-def deri_vec(a, b, c,s_c, covmat):
+def deri_vec(a, b, c, s_c, covmat):
     # c is a list
     c, s_c = np.array(c), np.array(s_c)
-    s_a,s_b = covmat[0][0],covmat[1][1]
-    rho =  covmat[1][0]
-    s_e = (((c-b)/a)**2*s_a**2+2*(c-b)/a**3+(1/a)**2*s_b**2+(1/a**2)*s_c**2)**0.5
+    s_a, s_b = covmat[0][0], covmat[1][1]
+    rho = covmat[1][0]
+    s_e = (((c - b) / a) ** 2 * s_a ** 2 + 2 * (c - b) / a ** 3 + (1 / a) ** 2 * s_b ** 2 + (
+                1 / a ** 2) * s_c ** 2) ** 0.5
     return s_e
 
 
@@ -158,7 +162,7 @@ def chi_square(xs, ys, errors_ys, fit_func):
 
 
 if __name__ == '__main__':
-    #sync_errors()
+    # sync_errors()
 
     # aluminium_data = read_counts_file('thr30measurementAl1159.itx')
     # activity = max_point_activity('thr30measurementAl1159.itx')
@@ -171,11 +175,10 @@ if __name__ == '__main__':
     # visualize_counts_plot(data, plot_peaks=False, data_label='With Aluminium')
 
     data = read_counts_file("thr30unknown1157.itx")
-    visualize_counts_plot(data, alpha=0.7, c='red', plot_peaks=False, data_label='11:57',normalize=False)
-
+    visualize_counts_plot(data, alpha=0.7, c='red', plot_peaks=False, data_label='11:57', normalize=False)
 
     data = read_counts_file("thr30unknown1326.itx")
-    visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26',normalize=False)
+    visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26', normalize=False)
     # /
     # data = read_counts_file("thr45measurement1104.itx")
     # visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26')
@@ -220,5 +223,10 @@ if __name__ == '__main__':
     # plt.xlim(0)
     # plt.ylim(0)
     #
+
+    labels = list(map(lambda x: str(int(x)), np.arange(0, 9001, 500)))
+    ticks = np.linspace(0, data.index.max(), len(labels))
+    plt.xticks(ticks, labels=labels, fontsize=12)
+
     plt.show()
     print('h')
