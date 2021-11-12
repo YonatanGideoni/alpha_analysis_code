@@ -34,7 +34,7 @@ def get_peaks(data: pd.Series, max_rel_size, min_dist, rebin_size, plot=True):
 def annotate_peaks(data, peaks, rebin_size, energy_label='E'):
     arrow_dy = data.max() / 15
     for peak, energy in zip(peaks, ENERGIES):
-        arrow_start_y = data.iloc[peak] + arrow_dy + 15
+        arrow_start_y = data.iloc[int(peak) - 1:int(peak) + 1].max() + arrow_dy + 15
         plt.arrow(peak, arrow_start_y, dx=0, dy=-arrow_dy, color='r', width=0.1, head_width=10)
 
         peak_text = f'${energy_label}$={energy}[keV]\n' \
@@ -72,9 +72,10 @@ def counts_spectrum():
 
     peaks_loc = []
     peaks_std = []
-    for peak, right_delta, height_offset in zip(peaks, right_deltas, text_height_offset):
-        params, cov_mat, p_val, relevant_channels = fit_gaussian_via_chisq(data, peak, right_delta=right_delta,
-                                                                           plot=False, verbose=False)
+    for energy, peak, right_delta, height_offset in zip(ENERGIES, peaks, right_deltas, text_height_offset):
+        params, cov_mat, p_val, relevant_channels, delta_peak = fit_gaussian_via_chisq(data, peak,
+                                                                                       right_delta=right_delta,
+                                                                                       plot=False, verbose=False)
 
         dense_relevant_channels = np.linspace(min(relevant_channels), max(relevant_channels))
         plt.plot(dense_relevant_channels, area_based_gaussian(dense_relevant_channels, *params), c='k')
@@ -82,9 +83,9 @@ def counts_spectrum():
         peak_channel = params[peak_ind]
         peaks_loc.append(peak_channel)
         peak_height = data.iloc[int(peak_channel) - 1:int(peak_channel) + 1].max()
-        peak_loc_std = cov_mat[peak_ind, peak_ind] ** 0.5
+        peak_loc_std = (cov_mat[peak_ind, peak_ind] + (delta_peak / 2) ** 2) ** 0.5
         peaks_std.append(peak_loc_std)
-        plot_peak_info(peak_channel, peak_height, peak_channel, peak_loc_std, height_offset)
+        plot_peak_info(peak_channel, peak_height, peak_channel, peak_loc_std, height_offset, energy=energy)
 
     setup_plot(data, 1, '$^{228}$Th Calibration Measurement Counts-per-Channel Spectrum')
 
@@ -119,7 +120,7 @@ def energy_spectrum(peaks: list, peak_error: list):
 
     peaks = np.array(peaks)
     chi_square = ((peaks - (ENERGIES - params[1]) / params[0]) ** 2 / np.array(peak_error) ** 2).sum()
-    print(f'{chi_square:.2f}')
+    print(f'chi^2={chi_square:.2f}')
 
 
 def material_width(path: str, material_name, rebin_size=8):
@@ -130,8 +131,6 @@ def material_width(path: str, material_name, rebin_size=8):
     peaks = get_peaks(data, max_rel_size=2.2, min_dist=60, rebin_size=rebin_size)
 
     annotate_peaks(data, peaks, rebin_size, energy_label='E_0')
-
-    # refined_mixed_peaks = get_refined_peaks(peaks[:-1], data, rebin_size, 20)
 
     setup_plot(data, rebin_size, f'$^{{228}}$Th Decay Spectrum with {material_name} Foil Blockage', xtick_every=40)
 
