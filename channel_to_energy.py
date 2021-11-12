@@ -18,4 +18,4 @@ def channel_to_energy(channel, channel_sigma, slope=4.62597326795493, intercept=
 
 
 if __name__ == '__main__':
-    print(channel_to_energy(1200, channel_sigma=2))
+    print(channel_to_energy(1311.7, channel_sigma=0.32))

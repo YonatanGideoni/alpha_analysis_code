@@ -16,6 +16,11 @@ ALUMINIUM_DATA = [(7100.113502915274, 10.80693204057931),
                   (4044.658159431042, 37.01727400211632),
                   (3246.6777707088163, 32.40134859076136),
                   (2876.599909272422, 44.73552183010315)]
+MYLAR_DATA = [(6716.157721675015, 26.217329723878365),
+              (4120.986718352299, 26.22640180686428),
+              (3401.6478751853065, 33.94062452012941),
+              (2448.697381986591, 27.792141569030456),
+              (1935.2143492435937, 37.04288282043993)]
 
 
 def load_data(path: str, rebin_size):
@@ -153,6 +158,7 @@ def material_width(path: str, material_name, energies, rebin_size=5):
 
     plt.xlabel('Energy[keV]', fontsize=13)
     plt.gca().legend().remove()
+    plt.ylabel(f'Counts per {rebin_size} Channels', fontsize=13)
 
 
 def aluminium_width():
@@ -160,7 +166,7 @@ def aluminium_width():
 
 
 def mylar_width():
-    return material_width('thr10Mylner1016.itx', 'Mylar')
+    return material_width('thr10Mylner1016.itx', 'Mylar', MYLAR_DATA)
 
 
 def get_material_energies(peaks, peak_err):
@@ -183,8 +189,9 @@ if __name__ == '__main__':
     # peaks, peak_error = counts_spectrum()
     # energy_spectrum(peaks, peak_error)
 
-    aluminium_width()
+    # aluminium_width()
     # calc_aluminium_width()
+    mylar_width()
 
     # peaks, peak_err = mylar_width()
     # get_material_energies(peaks, peak_err)
