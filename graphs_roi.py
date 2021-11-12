@@ -5,6 +5,8 @@ import os
 from peak_analysis import find_peaks, fit_gaussian_to_peak
 from read_input import read_counts_file, read_counts_file_time
 from visualization import visualize_counts_plot
+from channel_to_energy import channel_to_energy
+from peak_analysis import find_peaks, area_based_gaussian, fit_gaussian_via_chisq
 
 AREA_DELTA = 6
 PEAKS_LST = [6065, 6296, 6634, 8797]
@@ -32,7 +34,8 @@ def point_val(file_name):
 
 
 def write_data(ind_peak, peak, activities, delta_ts2, half_time, time_func_error):
-    print('peak num is ' + str(peak))
+    print('peak num is ' + str(peak) +'so in energy:')
+    print(channel_to_energy(peak, channel_sigma=2))
     print('half time = ' + str(half_time) + '+-' + str(time_func_error))
 
 
@@ -69,7 +72,7 @@ def files_lst(ind_peak, plot_exp=True):
         plt.plot(xs, y, '.',  label='fit')
         #plt.plot(delta_ts2, activities, '.',label='data')
         plt.xlabel('$\Delta$ time [sec]' ,fontsize=12)
-        plt.ylabel(str(PEAKS_LST[ind_peak])+' KeV activity [num/sec]',fontsize=12)
+        plt.ylabel(str(PEAKS_LST[ind_peak])+' keV activity [num/sec]',fontsize=12)
         plt.legend(fontsize=12)
 
         plt.xticks(fontsize=12)
@@ -95,10 +98,17 @@ def multi_measurment(vals,stds):
     std = (1/((1/stds**2).sum()))**0.5
     print(str(mean)+' +- '+str(std))
     return mean, std
+
 if __name__ ==  '__main__':
     #multi_measurment(np.array([31.25,34.95]), np.array([2.55,1.97]))
-    point_val("thr30unknown1157.itx")
-    print('13 points in total, so chi DF is 10')
-    print('p(chi^2<2.526)=0.01')
-    print('p(chi^2<13.245)=0.79')
-    plt.show()
+    # point_val("thr30unknown1157.itx")
+    # print('13 points in total, so chi DF is 10')
+    # print('p(chi^2<2.526)=0.01')
+    # print('p(chi^2<13.245)=0.79')
+    data = read_counts_file("thr30unknown1157.itx",normalize=False)
+    peaks, heights = find_peaks(data, max_rel_peak_size=20., min_peak_dist=20)
+    for peak in peaks:
+        print(fit_gaussian_via_chisq(data, peak,
+                               right_delta=8,
+                               plot=False, verbose=False))
+    #plt.show()
