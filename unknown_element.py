@@ -5,6 +5,7 @@ import os
 from peak_analysis import find_peaks, fit_gaussian_to_peak
 from read_input import read_counts_file, read_counts_file_time
 from visualization import visualize_counts_plot
+from channel_to_energy import channel_to_energy
 
 AREA_DELTA = 6
 def find_max(my_list):
@@ -169,12 +170,12 @@ if __name__ == '__main__':
     # find_peaks(data)
     # visualize_counts_plot(data, plot_peaks=False, data_label='With Aluminium')
 
-    # data = read_counts_file("thr30unknown1157.itx")
-    # visualize_counts_plot(data, alpha=0.7, c='m', plot_peaks=False, data_label='11:57',normalize=False)
-    #
+    data = read_counts_file("thr30unknown1157.itx")
+    visualize_counts_plot(data, alpha=0.7, c='red', plot_peaks=False, data_label='11:57',normalize=False)
 
-    # data = read_counts_file("thr30unknown1326.itx")
-    # visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26',normalize=False)
+
+    data = read_counts_file("thr30unknown1326.itx")
+    visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26',normalize=False)
     # /
     # data = read_counts_file("thr45measurement1104.itx")
     # visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26')
