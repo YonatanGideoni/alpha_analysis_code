@@ -81,7 +81,7 @@ def files_lst(ind_peak, plot_exp=True):
     half_time = params[1] * np.log(2)
     chi,chi_sum = chi_square(delta_ts2, activities,activities_errors,lambda x: params[0] * np.exp(-np.array(x) / (60 * params[1])) + params[2])
     #time_errors = np.array(delta_ts_temp) / 2
-    time_func_error = np.diagonal(cov_mat)[1] ** 0.5
+    time_func_error = np.log(2)*np.diagonal(cov_mat)[1] ** 0.5
     return activities, delta_ts2, half_time, time_func_error, chi_sum
 
 
@@ -173,8 +173,8 @@ if __name__ == '__main__':
     # visualize_counts_plot(data, alpha=0.7, c='m', plot_peaks=False, data_label='11:57',normalize=False)
     #
 
-    data = read_counts_file("thr30unknown1326.itx")
-    visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26',normalize=False)
+    # data = read_counts_file("thr30unknown1326.itx")
+    # visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26',normalize=False)
     # /
     # data = read_counts_file("thr45measurement1104.itx")
     # visualize_counts_plot(data, alpha=0.7, c='c', plot_peaks=False, data_label='13:26')

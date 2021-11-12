@@ -60,16 +60,16 @@ def files_lst(ind_peak, plot_exp=True):
     # record_time = [int(file[12:16]) for file in os.listdir() if file.startswith("thr30unknown")]
     # plt.plot(delta_ts, activities, '.')
     activities, activities_errors, delta_ts2 = helper(ind_peak)
-    params, cov_mat = curve_fit(lambda x, a, l, b: a * np.exp(-x / l) + b, np.array(delta_ts2) / 60, activities,
+    params, cov_mat = curve_fit(lambda x, a, l,b: a * np.exp(-x / l)+b , np.array(delta_ts2) / 60, activities,
                                 bounds=[0, 60],sigma=activities_errors)
     xs = np.linspace(min(delta_ts2)-10,max(delta_ts2)+10,num=10**5)
-    y = params[0] * np.exp(-np.array(xs) / (60 * params[1])) + params[2]
+    y = params[0] * np.exp(-np.array(xs) / (60 * params[1]))+params[2]
     if plot_exp:
         plt.errorbar(delta_ts2, activities, yerr=activities_errors, fmt='o', ecolor='r',  label='Data')
         plt.plot(xs, y, '.',  label='fit')
         #plt.plot(delta_ts2, activities, '.',label='data')
-        plt.xlabel('$\Delta$ time (sec)' ,fontsize=12)
-        plt.ylabel(str(PEAKS_LST[ind_peak])+' KeV activity (num/sec)',fontsize=12)
+        plt.xlabel('$\Delta$ time [sec]' ,fontsize=12)
+        plt.ylabel(str(PEAKS_LST[ind_peak])+' KeV activity [num/sec]',fontsize=12)
         plt.legend(fontsize=12)
 
         plt.xticks(fontsize=12)
@@ -77,20 +77,27 @@ def files_lst(ind_peak, plot_exp=True):
         plt.grid(True)
         plt.figure()
     half_time = params[1] * np.log(2)
-    chi,chi_sum = chi_square(delta_ts2, activities,activities_errors,lambda x: params[0] * np.exp(-np.array(x) / (60 * params[1])) + params[2])
+    chi,chi_sum = chi_square(delta_ts2, activities,activities_errors,lambda x: params[0] * np.exp(-np.array(x) / (60 * params[1]))+params[2] )
     #time_errors = np.array(delta_ts_temp) / 2
-    time_func_error = np.diagonal(cov_mat)[1] ** 0.5
+    time_func_error = np.log(2)*np.diagonal(cov_mat)[1] ** 0.5
+    print('y= ' + str(params[0]) + '*exp(-x/(60*' + str(params[1]) + ')) + ' + str(params[2]))
+    print('[a,tao,b] = [%f +- %f, %f +- %f, %f +- %f] '%(params[0],cov_mat[0][0]**0.5, params[1], cov_mat[1][1]**0.5, params[2], cov_mat[2][2]**0.5))
     return activities, delta_ts2, half_time, time_func_error, chi_sum
 
 def chi_square(xs, ys, errors_ys, fit_func):
     xs, ys, errors_ys = np.array(xs), np.array(ys), np.array(errors_ys)
     fits = fit_func(np.array(xs))
     delta_ys = ys - fits
-    chi = np.divide((delta_ys) ** 2, abs(errors_ys))
+    chi = np.divide((delta_ys) ** 2, errors_ys**2)
     return chi, chi.sum()
-
+def multi_measurment(vals,stds):
+    mean = np.divide(vals,stds**2).sum()/(1/stds**2).sum()
+    std = (1/((1/stds**2).sum()))**0.5
+    print(str(mean)+' +- '+str(std))
+    return mean, std
 if __name__ ==  '__main__':
-    point_val("thr30unknown1215.itx")
+    #multi_measurment(np.array([31.25,34.95]), np.array([2.55,1.97]))
+    point_val("thr30unknown1157.itx")
     print('13 points in total, so chi DF is 10')
     print('p(chi^2<2.526)=0.01')
     print('p(chi^2<13.245)=0.79')
